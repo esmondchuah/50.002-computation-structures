@@ -45,7 +45,7 @@ Xreg d[31:0] clk#32 ia[31:0] dreg                 // 32-bit register with clock
 Xregfile 
 + vdd 0 0 ra[4:0] adata[31:0]      // A read port
 + vdd 0 0 ra2mux[4:0] bdata[31:0]  // B read port 
-+ 0 clk werf rc[4:0] wdata[31:0]   // write port 
++ 0 clk werf wa[4:0] wdata[31:0]   // write port 
 + $memory width=32 nlocations=31
 
 Xra2sel ra2sel#5 rb[4:0] rc[4:0] ra2mux[4:0] mux2   // mux controlled by RA2SEL to select the correct address for the B read port
@@ -57,8 +57,7 @@ X31c ra2mux[0] ra2mux[1] ra2mux[2] ra2mux[3] hold2 and4
 X31d ra2mux[4] hold2 r31b and2
 
 // wasel mux
-Xxp vdd#4 0 xp[4:0] buffer
-Xwasel wasel#5 rc[4:0] xp[4:0] wa[4:0] mux2
+Xwasel wasel#5 rc[4:0] vdd#4 0 wa[4:0] mux2
 
 Xradata r31a#32 adata[31:0] 0#32 radata[31:0] mux2   // force the R31 adata for each port to "0"
 Xrbdata r31b#32 bdata[31:0] 0#32 rbdata[31:0] mux2   // force the R31 bdata for each port to "0"
@@ -145,6 +144,11 @@ Xor id[27] id[26] hold3 xor2
 Xnor id[26] z hold4 xnor2
 Xout hold2 hold3 hold4 vdd branch and4
 Xpcsel branch#3 xpcsel[2:0] 0#2 vdd pcsel[2:0] mux2
+
+//Xbranch1 z znot inverter
+//Xbranch2 xpcsel[2] xpcsel[0] check and2
+//Xbranch3 xpcsel[1] z znot zout mux2
+//Xbranch4 check#3 xpcsel[2:0] 0#2 zout pcsel[2:0] mux2
 
 Xreset reset xwr 0 wr mux2   // forces WR to 0 when RESET = 1
 .ends
@@ -248,4 +252,3 @@ Xconnect2 id[15]#16 id[15:0] csext[31:0] buffer  // c[15:0] sign-extended
 
 Xalu alufn[5:0] adata[31:0] bdata[31:0] ma[31:0] z1 v1 n1 alu   // alu output
 .ends
-
