@@ -1,0 +1,243 @@
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\stdcell.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab3adder.jsim"
+
+.subckt FA a b ci s co
+X1 a b 1 nand2
+X2 a ci 2 nand2
+X3 b ci 3 nand2
+X4 1 2 3 co nand3
+X5 a b x xor2
+X6 x ci s xor2
+.ends 
+
+.subckt adder32 ALUFN[0] A[31:0] B[31:0] S[31:0] z v n
+XREL B[31:0] ALUFN[0]#32 rel[31:0] xor2
+XADD1 A[0] rel[0] ALUFN[0] S[0] C[0] FA
+XADD2 A[30:1] rel[30:1] C[29:0] S[30:1] C[30:1] FA
+XADD3 A[31] rel[31] C[30] S[31] C[31] FA
+XZ1 S[7:0] S[15:8] S[23:16] S[31:24] r1[7:0] or4
+XZ2 r1[1:0] r1[3:2] r1[5:4] r1[7:6] r2[1:0] or4
+XZ3 r2[0] r2[1] z nor2
+XV1 A[31] Anot inverter
+XV2 rel[31] Bnot inverter
+XV3 S[31] Snot inverter
+XV4 A[31] rel[31] Snot r3 and3
+XV5 Anot Bnot S[31] r4 and3
+XV6 r3 r4 v or2
+.connect S[31] n
+.ends
+
+
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\stdcell.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab3compare.jsim"
+
+.subckt compare32 ALUFN[2:1] z v n cmp[31:0]
+.connect 0 cmp[31:1]
+X1 n v rel1 xor2
+X2 z rel1 rel2 or2
+XMUX1 ALUFN[1] ALUFN[2] 0 z rel1 rel2 cmp[0] mux4
+.ends
+
+
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\stdcell.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab3boolean.jsim"
+
+.subckt boole32 ALUFN[3:0] A[31:0] B[31:0] boole[31:0]
+XMUX1 A[31:0] B[31:0] ALUFN[0]#32 ALUFN[1]#32 ALUFN[2]#32 ALUFN[3]#32 boole[31:0] mux4
+.ends
+
+
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\stdcell.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab3shifter.jsim"
+
+.subckt shift32 ALUFN[1:0] A[31:0] B[4:0] shift[31:0]
+XHL4 B[4]#32 A[31:0] A[15:0] 0#16 W[31:0] mux2
+XHL3 B[3]#32 W[31:0] W[23:0] 0#8 X[31:0] mux2
+XHL2 B[2]#32 X[31:0] X[27:0] 0#4 Y[31:0] mux2
+XHL1 B[1]#32 Y[31:0] Y[29:0] 0#2 Z[31:0] mux2
+XHL0 B[0]#32 Z[31:0] Z[30:0] 0 SHL[31:0] mux2
+
+XHR4 B[4]#32 A[31:0] 0#16 A[31:16] P[31:0] mux2
+XHR3 B[3]#32 P[31:0] 0#8 P[31:8] Q[31:0] mux2
+XHR2 B[2]#32 Q[31:0] 0#4 Q[31:4] R[31:0] mux2
+XHR1 B[1]#32 R[31:0] 0#2 R[31:2] S[31:0] mux2
+XHR0 B[0]#32 S[31:0] 0 S[31:1] SHR[31:0] mux2
+
+XRA4 B[4]#32 A[31:0] A[31]#16 A[31:16] F[31:0] mux2
+XRA3 B[3]#32 F[31:0] F[31]#8 F[31:8] G[31:0] mux2
+XRA2 B[2]#32 G[31:0] G[31]#4 G[31:4] H[31:0] mux2
+XRA1 B[1]#32 H[31:0] H[31]#2 H[31:2] J[31:0] mux2
+XRA0 B[0]#32 J[31:0] J[31] J[31:1] SRA[31:0] mux2
+
+XALL ALUFN[0]#32 ALUFN[1]#32 SHL[31:0] SHR[31:0] 0#32 SRA[31:0] shift[31:0] mux4
+.ends
+
+
+
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\stdcell.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab3checkoff_6.jsim"
+
+.subckt alu ALUFN[5:0] A[31:0] B[31:0] alu[31:0] z v n
+X1 ALUFN[0] A[31:0] B[31:0] S[31:0] z v n adder32
+X2 ALUFN[2:1] z v n cmp[31:0] compare32
+X3 ALUFN[3:0] A[31:0] B[31:0] boole[31:0] boole32
+X4 ALUFN[1:0] A[31:0] B[4:0] shift[31:0] shift32
+XMUX ALUFN[4]#32 ALUFN[5]#32 S[31:0] boole[31:0] shift[31:0] cmp[31:0] alu[31:0] mux4
+.ends
+
+
+
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\stdcell.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab3multiply.jsim"
+
+.subckt multiply32 A[31:0] B[31:0] fin[31:0]
+XANDS B[0] A[0] fin[0] and2
+XAND0 B[0]#31 A[31:1] rel0A[31:1] and2
+XAND1 B[1]#31 A[30:0] rel1A[30:0] and2
+XFA10 rel0A[1] rel1A[0] 0 fin[1] out1A[0] FA
+XFA11 rel0A[31:2] rel1A[30:1] out1A[29:0] sum1A[30:1] out1A[30:1] FA
+
+XAND2 B[2]#30 A[29:0] rel2A[29:0] and2
+XFA20 sum1A[1] rel2A[0] 0 fin[2] out2A[0] FA
+XFA21 sum1A[30:2] rel2A[29:1] out2A[28:0] sum2A[29:1] out2A[29:1] FA
+
+XAND3 B[3]#29 A[28:0] rel3A[28:0] and2
+XFA30 sum2A[1] rel3A[0] 0 fin[3] out3A[0] FA
+XFA31 sum2A[29:2] rel3A[28:1] out3A[27:0] sum3A[28:1] out3A[28:1] FA
+
+XAND4 B[4]#28 A[27:0] rel4A[27:0] and2
+XFA40 sum3A[1] rel4A[0] 0 fin[4] out4A[0] FA
+XFA41 sum3A[28:2] rel4A[27:1] out4A[26:0] sum4A[27:1] out4A[27:1] FA
+
+XAND5 B[5]#27 A[26:0] rel5A[26:0] and2
+XFA50 sum4A[1] rel5A[0] 0 fin[5] out5A[0] FA
+XFA51 sum4A[27:2] rel5A[26:1] out5A[25:0] sum5A[26:1] out5A[26:1] FA
+
+XAND6 B[6]#26 A[25:0] rel6A[25:0] and2
+XFA60 sum5A[1] rel6A[0] 0 fin[6] out6A[0] FA
+XFA61 sum5A[26:2] rel6A[25:1] out6A[24:0] sum6A[25:1] out6A[25:1] FA
+
+XAND7 B[7]#25 A[24:0] rel7A[24:0] and2
+XFA70 sum6A[1] rel7A[0] 0 fin[7] out7A[0] FA
+XFA71 sum6A[25:2] rel7A[24:1] out7A[23:0] sum7A[24:1] out7A[24:1] FA
+
+XAND8 B[8]#24 A[23:0] rel8A[23:0] and2
+XFA80 sum7A[1] rel8A[0] 0 fin[8] out8A[0] FA
+XFA81 sum7A[24:2] rel8A[23:1] out8A[22:0] sum8A[23:1] out8A[23:1] FA
+
+XAND9 B[9]#23 A[22:0] rel9A[22:0] and2
+XFA90 sum8A[1] rel9A[0] 0 fin[9] out9A[0] FA
+XFA91 sum8A[23:2] rel9A[22:1] out9A[21:0] sum9A[22:1] out9A[22:1] FA
+
+XAND10 B[10]#22 A[21:0] rel10A[21:0] and2
+XFA100 sum9A[1] rel10A[0] 0 fin[10] out10A[0] FA
+XFA101 sum9A[22:2] rel10A[21:1] out10A[20:0] sum10A[21:1] out10A[21:1] FA
+
+XAND11 B[11]#21 A[20:0] rel11A[20:0] and2
+XFA110 sum10A[1] rel11A[0] 0 fin[11] out11A[0] FA
+XFA111 sum10A[21:2] rel11A[20:1] out11A[19:0] sum11A[20:1] out11A[20:1] FA
+
+XAND12 B[12]#20 A[19:0] rel12A[19:0] and2
+XFA120 sum11A[1] rel12A[0] 0 fin[12] out12A[0] FA
+XFA121 sum11A[20:2] rel12A[19:1] out12A[18:0] sum12A[19:1] out12A[19:1] FA
+
+XAND13 B[13]#19 A[18:0] rel13A[18:0] and2
+XFA130 sum12A[1] rel13A[0] 0 fin[13] out13A[0] FA
+XFA131 sum12A[19:2] rel13A[18:1] out13A[17:0] sum13A[18:1] out13A[18:1] FA
+
+XAND14 B[14]#18 A[17:0] rel14A[17:0] and2
+XFA140 sum13A[1] rel14A[0] 0 fin[14] out14A[0] FA
+XFA141 sum13A[18:2] rel14A[17:1] out14A[16:0] sum14A[17:1] out14A[17:1] FA
+
+XAND15 B[15]#17 A[16:0] rel15A[16:0] and2
+XFA150 sum14A[1] rel15A[0] 0 fin[15] out15A[0] FA
+XFA151 sum14A[17:2] rel15A[16:1] out15A[15:0] sum15A[16:1] out15A[16:1] FA
+
+XAND16 B[16]#16 A[15:0] rel16A[15:0] and2
+XFA160 sum15A[1] rel16A[0] 0 fin[16] out16A[0] FA
+XFA161 sum15A[16:2] rel16A[15:1] out16A[14:0] sum16A[15:1] out16A[15:1] FA
+
+XAND17 B[17]#15 A[14:0] rel17A[14:0] and2
+XFA170 sum16A[1] rel17A[0] 0 fin[17] out17A[0] FA
+XFA171 sum16A[15:2] rel17A[14:1] out17A[13:0] sum17A[14:1] out17A[14:1] FA
+
+XAND18 B[18]#14 A[13:0] rel18A[13:0] and2
+XFA180 sum17A[1] rel18A[0] 0 fin[18] out18A[0] FA
+XFA181 sum17A[14:2] rel18A[13:1] out18A[12:0] sum18A[13:1] out18A[13:1] FA
+
+XAND19 B[19]#13 A[12:0] rel19A[12:0] and2
+XFA190 sum18A[1] rel19A[0] 0 fin[19] out19A[0] FA
+XFA191 sum18A[13:2] rel19A[12:1] out19A[11:0] sum19A[12:1] out19A[12:1] FA
+
+XAND20 B[20]#12 A[11:0] rel20A[11:0] and2
+XFA200 sum19A[1] rel20A[0] 0 fin[20] out20A[0] FA
+XFA201 sum19A[12:2] rel20A[11:1] out20A[10:0] sum20A[11:1] out20A[11:1] FA
+
+XAND21 B[21]#11 A[10:0] rel21A[10:0] and2
+XFA210 sum20A[1] rel21A[0] 0 fin[21] out21A[0] FA
+XFA211 sum20A[11:2] rel21A[10:1] out21A[9:0] sum21A[10:1] out21A[10:1] FA
+
+XAND22 B[22]#10 A[9:0] rel22A[9:0] and2
+XFA220 sum21A[1] rel22A[0] 0 fin[22] out22A[0] FA
+XFA221 sum21A[10:2] rel22A[9:1] out22A[8:0] sum22A[9:1] out22A[9:1] FA
+
+XAND23 B[23]#9 A[8:0] rel23A[8:0] and2
+XFA230 sum22A[1] rel23A[0] 0 fin[23] out23A[0] FA
+XFA231 sum22A[9:2] rel23A[8:1] out23A[7:0] sum23A[8:1] out23A[8:1] FA
+
+XAND24 B[24]#8 A[7:0] rel24A[7:0] and2
+XFA240 sum23A[1] rel24A[0] 0 fin[24] out24A[0] FA
+XFA241 sum23A[8:2] rel24A[7:1] out24A[6:0] sum24A[7:1] out24A[7:1] FA
+
+XAND25 B[25]#7 A[6:0] rel25A[6:0] and2
+XFA250 sum24A[1] rel25A[0] 0 fin[25] out25A[0] FA
+XFA251 sum24A[7:2] rel25A[6:1] out25A[5:0] sum25A[6:1] out25A[6:1] FA
+
+XAND26 B[26]#6 A[5:0] rel26A[5:0] and2
+XFA260 sum25A[1] rel26A[0] 0 fin[26] out26A[0] FA
+XFA261 sum25A[6:2] rel26A[5:1] out26A[4:0] sum26A[5:1] out26A[5:1] FA
+
+XAND27 B[27]#5 A[4:0] rel27A[4:0] and2
+XFA270 sum26A[1] rel27A[0] 0 fin[27] out27A[0] FA
+XFA271 sum26A[5:2] rel27A[4:1] out27A[3:0] sum27A[4:1] out27A[4:1] FA
+
+XAND28 B[28]#4 A[3:0] rel28A[3:0] and2
+XFA280 sum27A[1] rel28A[0] 0 fin[28] out28A[0] FA
+XFA281 sum27A[4:2] rel28A[3:1] out28A[2:0] sum28A[3:1] out28A[3:1] FA
+
+XAND29 B[29]#3 A[2:0] rel29A[2:0] and2
+XFA290 sum28A[1] rel29A[0] 0 fin[29] out29A[0] FA
+XFA291 sum28A[3:2] rel29A[2:1] out29A[1:0] sum29A[2:1] out29A[2:1] FA
+
+XAND30 B[30]#2 A[1:0] rel30A[1:0] and2
+XFA300 sum29A[1] rel30A[0] 0 fin[30] out30A[0] FA
+XFA301 sum29A[2] rel30A[1] out30A[0] sum30A[1] out30A[1] FA
+
+XAND31 B[31] A[0] rel31A[0] and2
+XFA310 sum30A[1] rel31A[0] 0 fin[31] out31A[0] FA
+.ends
+
+
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\stdcell.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab3checkoff_10.jsim"
+
+.subckt choose ALUFN[1:0] A[31:0] B[31:0] out[31:0] z v n
+X1 ALUFN[0] A[31:0] B[31:0] S[31:0] z v n adder32
+X2 A[31:0] B[31:0] fin[31:0] multiply32
+XMUX ALUFN[1]#32 S[31:0] fin[31:0] out[31:0] mux2
+.ends
+
+.subckt alu ALUFN[5:0] A[31:0] B[31:0] alu[31:0] z v n
+X1 ALUFN[1:0] A[31:0] B[31:0] out[31:0] z v n choose
+X2 ALUFN[2:1] z v n cmp[31:0] compare32
+X3 ALUFN[3:0] A[31:0] B[31:0] boole[31:0] boole32
+X4 ALUFN[1:0] A[31:0] B[4:0] shift[31:0] shift32
+XMUX ALUFN[4]#32 ALUFN[5]#32 out[31:0] boole[31:0] shift[31:0] cmp[31:0] alu[31:0] mux4
+.ends
