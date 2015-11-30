@@ -1,0 +1,105 @@
+| include instruction macros and test jig
+.include C:\Users\Esmond\Desktop\50002\beta.uasm
+.include C:\Users\Esmond\Desktop\50002\lab5checkoff.uasm
+
+count_bull_cows:                        | your subroutine must have this name
+	PUSH(LP)                            | standard subroutine entry sequence
+	PUSH(BP)
+	MOVE(SP, BP)
+
+	PUSH(R1)                            | int bulls
+	PUSH(R2)                            | int cows
+	PUSH(R3)                            | a
+	PUSH(R4)                            | b
+	PUSH(R5)                            | int i
+	PUSH(R6)                            | int j
+	PUSH(R7)                            | int btemp
+	PUSH(R8)                            | int atry
+	PUSH(R9)                            | int btry
+	PUSH(R10)                           | int mask
+	PUSH(R11)
+	PUSH(R12)
+	PUSH(R13)
+	PUSH(R14)
+
+	LD(BP,-12,R3)                       | a
+	LD(BP,-16,R4)                       | b
+	CMOVE(0,R1)                         | bulls = 0
+	CMOVE(0xF,R10)                      | mask = 0xF
+	
+	CMOVE(0,R5)                         | i = 0		
+	BR(end1)
+for1:
+	AND(R3,R10,R11)                     | a & mask
+	AND(R4,R10,R12)                     | b & mask
+	CMPEQ(R11,R12,R13)                  | (a & mask) == (b & mask)
+	BEQ(R13,exitIf1,R31)                | if
+	ADDC(R1,1,R1)                       | bulls = bulls + 1
+	OR(R3,R10,R3)                       | a = a | mask
+	OR(R4,R10,R4)                       | b = b | mask
+exitIf1:
+	SHLC(R10,4,R10)                     | mask = mask << 4
+	ADDC(R5,1,R5)                       | i = i + 1
+end1: 
+	CMPLTC(R5,4,R14)                    | check if i < 4
+	BNE(R14,for1,R31)                   | loop back
+
+	CMOVE(0,R2)                         | cows = 0
+	CMOVE(0,R5)                         | i = 0
+	BR(end2)
+for2:
+	ANDC(R3,0xF,R8)                     | atry = a & 0xF
+	SHRC(R3,4,R3)                       | a = a >> 4
+	CMPEQC(R8,0xF,R11)                  | atry != 0xF
+	BNE(R11,exitIf2,R31)                | if
+	ADDC(R4,0,R7)                       | btemp = b
+	CMOVE(0xF,R10)                      | mask = 0xF
+
+	CMOVE(0,R6)                         | j = 0
+	BR(end3)
+for3:
+	ANDC(R7,0xF,R9)                     | btry = btemp & 0xF
+	SHRC(R7,4,R7)                       | btemp = btemp >> 4
+	CMPEQ(R9,R8,R12)                    | btry == atry
+	BEQ(R12,exitIf3,R31)                | if
+	ADDC(R2,1,R2)                       | cows = cows + 1
+	OR(R4,R10,R4)                       | b = b | mask
+	BR(exitIf2)                         | break
+exitIf3:
+	SHLC(R10,4,R10)                     | mask = mask << 4
+	ADDC(R6,1,R6)                       | j = j + 1
+end3:
+	CMPLTC(R6,4,R13)                    | check if j < 4
+	BNE(R13,for3,R31)                   | loop back
+
+exitIf2:
+	ADDC(R5,1,R5)                       | i = i + 1
+end2:
+	CMPLTC(R5,4,R14)                    | check if i < 4
+	BNE(R14,for2,R31)                   | loop back
+	SHLC(R1,4,R1)                       | bulls << 4
+	ADD(R1,R2,R0)                       | return (bulls << 4) + cows
+
+	POP(R14)
+	POP(R13)
+	POP(R12)
+	POP(R11)
+	POP(R10)
+	POP(R9)
+	POP(R8)
+	POP(R7)
+	POP(R6)
+	POP(R5)
+	POP(R4)
+	POP(R3)
+	POP(R2)
+	POP(R1)
+
+	MOVE(BP,SP)                         | standard subroutine exit sequence
+	POP(BP)
+	POP(LP)
+	RTN()
+
+StackBase:
+	LONG(.+4)                           | Pointer to bottom of stack
+	. = .+0x1000                        | Reserve space for stack...
