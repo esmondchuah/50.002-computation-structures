@@ -145,11 +145,6 @@ Xnor id[26] z hold4 xnor2
 Xout hold2 hold3 hold4 vdd branch and4
 Xpcsel branch#3 xpcsel[2:0] 0#2 vdd pcsel[2:0] mux2
 
-//Xbranch1 z znot inverter
-//Xbranch2 xpcsel[2] xpcsel[0] check and2
-//Xbranch3 xpcsel[1] z znot zout mux2
-//Xbranch4 check#3 xpcsel[2:0] 0#2 zout pcsel[2:0] mux2
-
 Xreset reset xwr 0 wr mux2   // forces WR to 0 when RESET = 1
 .ends
 
