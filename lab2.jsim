@@ -1,0 +1,23 @@
+.include "C:\Users\Esmond\Desktop\50002\nominal.jsim"
+.include "C:\Users\Esmond\Desktop\50002\lab2checkoff.jsim"
+.include "C:\Users\Esmond\Desktop\50002\gatesLibrary.jsim"
+
+.subckt FA a b ci s co
+XND1 a b 1 nand
+XND2 a ci 2 nand
+XND3 b ci 3 nand
+XND4 1 2 3 co nand2
+XXR1 a b x xor
+XXR2 x ci s xor
+.ends 
+
+.subckt ADDER4 a3 a2 a1 a0 b3 b2 b1 b0 s4 s3 s2 s1 s0 
+* remember the node named "0" is the ground node 
+* nodes c0 through c3 are internal to the ADDER module 
+Xbit0 a0 b0 0 s0 c0 FA 
+Xbit1 a1 b1 c0 s1 c1 FA 
+Xbit2 a2 b2 c1 s2 c2 FA 
+Xbit3 a3 b3 c2 s3 s4 FA 
+.ends
+
+.plot Xtest.c0
