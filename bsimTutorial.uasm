@@ -1,0 +1,172 @@
+**************************************
+int square(int n){
+	return n*n;
+}
+
+square(4);
+
+LDR(StackBase,SP)
+CMOVE(4,R1)
+PUSH(R1)
+BR(square,LP)
+HALT()
+
+square:
+PUSH(LP)
+PUSH(BP)
+MOVE(SP,BP)
+
+PUSH(R2)
+LD(BP,-12, R2)
+
+MUL(R2, R2, R0)
+POP(R2)
+
+MOVE(BP,SP)
+POP(BP)
+POP(LP)
+JMP(LP)
+
+StackBase: LONG(.+4)
+
+
+**************************************
+int x = 2;
+int y = 4;
+int z = 0;
+
+if(x >= y)
+  z = x;
+else
+  z = y;
+
+z = z+1;
+
+
+	LDR(x,R1)       | load the value in label x into R1
+	LDR(y,R2)       | load the value in label y into R2
+	CMPLE(R2,R1,R0) | if contents of R2 <= contents of R1, '1' is written to R0; else '0'
+	BNE(R0,if,R31)  | if contents of R0 != 0, branch to 'if'
+	MOVE(R2,R0)     | move the contents of R2 to R0
+	BR(end)         | branch to 'end'
+if:
+	MOVE(R1,R0)     | move the contents of R1 to R0
+end:
+	ADDC(R0,1,R0)   | the contents of R0 is added to 1, and the sum is written to R0
+	ST(R0,z)        | store the contents of R0 into z
+
+x:	LONG(2)		
+y:	LONG(4)
+z:	LONG(0)
+
+
+*************************************
+int n = 5;
+int sum = 0;
+for (int i = 0; i<n; i++)
+  sum += i;
+
+
+    LDR(n,R1)       | load n into R1
+    LDR(sum, R0)    | load sum into R0
+    ADDC(R31,0,R2)  | (inits) add the contents of R31 and 0, then write to R2
+    BR(end)         | branch to 'end'
+for:
+	ADD(R0,R2,R0)   | (body) sum of contents of R0 and R2 is written to R0
+	ADDC(R2,1,R2)   | (afters) add the contents of R2 and 1, then write to R2
+end:
+	CMPLT(R2,R1,R3) | (tests) if contents of R2 < contents of R1, '1' is written to R3; else '0'
+	BNE(R3,for,R31) | if contents of R3 != 0, branch to 'for'
+
+	ST(R0,sum)      | store the contents of R0 into sum
+
+n:	LONG(5)
+sum:LONG(0)
+
+
+*************************************
+int n, ans;
+r1 = 1;
+r2 = n;
+while (r2 != 0){
+	r1 = r1 * r2;
+	r2 = r2 - 1;
+}
+ans = r1;
+
+
+n:	long(123)
+ans:long(0)
+
+	ADDC(R31,1,R1)    | R1 = 1
+	LD(n,R2)          | R2 = n
+loop:
+	BEQ(R2,end,R31)   | while (R2 != 0)
+	MUL(R1,R2,R1)     | R1 = R1 * R2
+	SUBC(R2,1,R2)     | R2 = R2 - 1
+	BEQ(R31,loop,R31) | Always branches
+end:
+	ST(R1,ans,R31)    | ans = R1
+
+
+*************************************
+int n = 20;
+int r;
+r = 1;
+
+while(n > 0){
+	r = r * n;
+	n = n - 1;
+}
+
+
+n:	LONG(20)       | int n = 20
+r:	LONG(0)        | int r = 0
+start:
+	LD(n,R1)       | R1 = n
+	ADDC(R31,1,R3) | R3 = 1
+	BEQ(R1,end)    | if R1 = 0, exit loop
+loop:
+	MUL(R1,R3,R3)  | R3 = R1 * R3
+	SUBC(R1,1,R1)  | R1 = R1 - 1
+	BNE(R1,loop)   | if R1 != 0, back to loop
+end:
+	ST(R1,n)       | n = R1
+	ST(R3,r)       | r = R3
+
+
+*************************************
+int fact(int n){
+	int r = 1;
+	while (n>0){
+		r = r * n;
+		n = n - 1;
+	}
+	return r;
+}
+
+fact(4);
+
+
+fact: 
+	PUSH(LP)       | save linkages
+	PUSH(BP)
+	MOVE(SP,BP)    | new frame base
+	PUSH(r1)       | preserve regs
+	LD(BP,-12,r1)  | r1 <-- n
+	BNE(r1,big)    | if (n != 0)
+	ADDC(r31,1,r0) | else return 1;
+	BR(rtn)
+big: 
+	SUBC(r1,1,r1)  | r1 <-- (n-1)
+	PUSH(r1)       | push arg1
+	BR(fact,LP)    | fact(n-1)
+	DEALLOCATE(1)  | pop arg1
+	LD(BP,-12,r1)  | r0 <-- n
+	MUL(r1,r0,r0)  | r0 <-- n*fact(n-1)
+rtn:
+	POP(r1)        | restore regs
+	MOVE(BP,SP)    | Why?
+	POP(BP)        | restore links
+	POP(LP)
+	JMP(LP,R31)    | return.
