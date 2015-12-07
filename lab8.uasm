@@ -286,6 +286,10 @@ ProcTbl:
 	LONG(P2Stack)		| Process 2: SP
 	LONG(P2Start)		| Process 2: XP (= PC)
 
+	STORAGE(29)		| Process 3: R0-R28
+	LONG(P3Stack)		| Process 3: SP
+	LONG(P3Start)		| Process 3: XP (= PC)
+
 CurProc: LONG(ProcTbl)
 
 ||| Schedule a new process.
@@ -754,3 +758,29 @@ P2Start:
 P2Stack: STORAGE(256)
 
 Count3: LONG(0)
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+||| USER MODE Process 3: Reports mouse clicks.
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+P3Start:
+	Mouse()
+	ADD(r0,r31,r1)
+	SHRC(r0,16,r0)
+
+	WrMsg()
+	.text"\n Click at x = "
+	HexPrt()
+
+	SHLC(r1,16,r1)
+	SHRC(r1,16,r1)
+	ADD(r1,r31,r0)
+
+	WrMsg()
+	.text"\n Click at y = "
+	HexPrt()
+
+	BR(P3Start)
+
+P3Stack:
+	STORAGE(256)
