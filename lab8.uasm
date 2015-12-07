@@ -572,6 +572,7 @@ WrEnd:
 
 Prompt:	semaphore(1)         | To keep us from typing next prompt
 	                         | while P1 is typing previous output.
+x:	semaphore(0)
 
 P0Start:WrMsg()
 	.text "Start typing, Bunky.\n\n"
@@ -585,6 +586,18 @@ P0Read:	Wait(Prompt)         | Wait until P1 has caught up...
 	.text "> "
 
 	LD(P0LinP, r3)           | ...then read a line into buffer...
+
+P0MouseCheck:
+	LD(Mouse_State,r1)
+	BEQ(r1,P0KeyCheck)
+	Signal(x)
+	Yield()
+	BR(P0Read)
+
+P0KeyCheck:
+	LD(Key_State,r1)
+	BEQ(r1,P0MouseCheck)
+
 
 P0RdCh: GetKey()             | read next character,
 
@@ -764,6 +777,7 @@ Count3: LONG(0)
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 P3Start:
+	Wait(x)
 	Mouse()
 	ADD(r0,r31,r1)
 	SHRC(r0,16,r0)
@@ -780,6 +794,7 @@ P3Start:
 	.text"\n Click at y = "
 	HexPrt()
 
+	Signal(Prompt)
 	BR(P3Start)
 
 P3Stack:
