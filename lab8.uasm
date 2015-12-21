@@ -484,17 +484,17 @@ KMsgAux:
 
 	MOVE (R0, R1)
 
-WrWord:	LD (R1, 0, R2)		| Fetch a 4-byte word into R2
-	ADDC (R1, 4, R1)	| Increment word pointer
-	CMOVE(4,r3)		| Byte/word counter
+WrWord:	LD (R1, 0, R2)  | Fetch a 4-byte word into R2
+	ADDC (R1, 4, R1)    | Increment word pointer
+	CMOVE(4,r3)         | Byte/word counter
 
-WrByte:	ANDC(r2, 0x7F, r0)	| Grab next byte -- LOW end first!
-	BEQ(r0, WrEnd)		| Zero byte means end of text.
-	WRCHAR()		| Print it.
-	SRAC(r2,8,r2)		| Shift out this byte
-	SUBC(r3,1,r3)		| Count down... done with this word?
-	BNE(r3,WrByte)		| Nope, continue.
-	BR(WrWord)		| Yup, on to next.
+WrByte:	ANDC(r2, 0x7F, r0)   | Grab next byte -- LOW end first!
+	BEQ(r0, WrEnd)           | Zero byte means end of text.
+	WRCHAR()                 | Print it.
+	SRAC(r2,8,r2)            | Shift out this byte
+	SUBC(r3,1,r3)            | Count down... done with this word?
+	BNE(r3,WrByte)           | Nope, continue.
+	BR(WrWord)               | Yup, on to next.
 
 WrEnd:
 	MOVE (R1, R0)
@@ -572,7 +572,8 @@ WrEnd:
 
 Prompt:	semaphore(1)         | To keep us from typing next prompt
 	                         | while P1 is typing previous output.
-x:	semaphore(0)
+x:	semaphore(0)             | To keep process 3 from printing the mouse click
+                             | coordinate before the user finishes typing
 
 P0Start:WrMsg()
 	.text "Start typing, Bunky.\n\n"
@@ -588,15 +589,15 @@ P0Read:	Wait(Prompt)         | Wait until P1 has caught up...
 	LD(P0LinP, r3)           | ...then read a line into buffer...
 
 P0MouseCheck:
-	LD(Mouse_State,r1)
-	BEQ(r1,P0KeyCheck)
-	Signal(x)
+	LD(Mouse_State,r1)       | load Mouse state into r1
+	BEQ(r1,P0KeyCheck)       | if r1 == 0, branch to P0KeyCheck
+	Signal(x)                | else, 'x' semaphore += 1 and process 3 can be executed
 	Yield()
-	BR(P0Read)
+	BR(P0Read)               | branch to P0Read
 
 P0KeyCheck:
-	LD(Key_State,r1)
-	BEQ(r1,P0MouseCheck)
+	LD(Key_State,r1)         | load Key state into r1
+	BEQ(r1,P0MouseCheck)     | if r1 == 0, branch to P0MouseCheck
 
 
 P0RdCh: GetKey()             | read next character,
@@ -761,7 +762,6 @@ P1Stack: STORAGE(256)       | Stack for process 2.
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 P2Start:
-	Mouse()
 	LD(Count3, r0)  | Another quantum, incr count3.
 	ADDC(r0,1,r0)
 	ST(r0,Count3)
@@ -777,25 +777,26 @@ Count3: LONG(0)
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 P3Start:
-	Wait(x)
-	Mouse()
-	ADD(r0,r31,r1)
-	SHRC(r0,16,r0)
+	Wait(x)                     | if 'x' semaphore == 0, wait; else if semaphore == 1, execure the next line and sempahore -= 1
+	Mouse()                     | call Mouse macro
+	ADD(r0,r31,r1)              | store contents of r0 into r1
+	SHRC(r0,16,r0)              | first 16 bits refer to x-coordinate and last 16 bits refer to y-coordinate
+	                            | shift right by 16 bits to eliminate the y-coordinate
 
 	WrMsg()
 	.text"\n Click at x = "
-	HexPrt()
+	HexPrt()                    | print the x-coordinate
 
-	SHLC(r1,16,r1)
-	SHRC(r1,16,r1)
+	SHLC(r1,16,r1)              | r1 contains the untempered xy coordinates
+	SHRC(r1,16,r1)              | shift left then shift right to eliminate the x-coordinate
 	ADD(r1,r31,r0)
 
 	WrMsg()
-	.text"\n Click at y = "
-	HexPrt()
+	.text", y = "
+	HexPrt()                    | print the y-coordinate
 
-	Signal(Prompt)
-	BR(P3Start)
+	Signal(Prompt)              | the 'Prompt' semaphore += 1
+	BR(P3Start)                 | branch back to P3Start
 
 P3Stack:
 	STORAGE(256)
